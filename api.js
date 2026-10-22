@@ -32,7 +32,7 @@
     } else {
       const r = await fetch('/api/data', { credentials: 'include' });
       if (r.status === 401) { const e = new Error('Sesión expirada'); e.code = 401; throw e; }
-      if (!r.ok) throw new Error('Error al cargar datos (' + r.status + ')');
+      if (!r.ok) { let msg = ''; try { msg = (await r.json()).error || ''; } catch (e) {} throw new Error(msg ? msg + ' (' + r.status + ')' : 'Error al cargar datos (' + r.status + ')'); }
       const j = await r.json();
       raw = Array.isArray(j) ? j : (j.rows || []);
     }

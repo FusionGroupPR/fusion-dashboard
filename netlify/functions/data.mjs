@@ -30,7 +30,7 @@ export default async (req) => {
       const headers = { Accept: 'application/json' };
       if (process.env.COGNITO_API_KEY) headers.Authorization = 'Bearer ' + process.env.COGNITO_API_KEY;
       const r = await fetch(next, { headers });
-      if (!r.ok) return json({ error: 'Cognito respondió ' + r.status }, 502);
+      if (!r.ok) { const t = (await r.text()).slice(0, 300); return json({ error: 'Cognito respondió ' + r.status + (t ? ': ' + t : ''), url: next.replace(/access_token=[^&]+/, 'access_token=***') }, 502); }
       const j = await r.json();
       entries.push(...(j.value || []));
       next = j['@odata.nextLink'] || null;
