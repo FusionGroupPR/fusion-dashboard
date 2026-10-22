@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="robots" content="noindex, nofollow">
+<title>Store Analysis · Fusion Restaurant Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="./config.js"></script>
+<script src="./api.js"></script>
+<style>
+html,body{margin:0;padding:0;background:#F4F5F9;}
+*{box-sizing:border-box;}
+a{color:#3F4DB8;}
+a:hover{color:#14163A;}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#F4F5F9;color:#1B1F4B;font-family:Inter, 'Segoe UI', system-ui, sans-serif;font-size:14px;font-variant-numeric:tabular-nums;overflow-x:hidden">
+
+<sc-if value="{{ showBoot }}" hint-placeholder-val="{{ false }}">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:#6B7280;font-size:13px">Cargando…</div>
+</sc-if>
+
+<sc-if value="{{ showLogin }}" hint-placeholder-val="{{ false }}">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#14163A 0%,#2A1E5C 55%,#5B0F6E 100%)">
+    <form onSubmit="{{ onLogin }}" style="width:100%;max-width:380px;background:#fff;border-radius:16px;padding:36px 32px 28px;box-shadow:0 24px 60px rgba(8,8,30,.35);display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:baseline;gap:6px"><span style="font-weight:800;letter-spacing:.1em;font-size:18px;color:#14163A">FUSION</span><span style="font-size:13px;color:#6B7280">Restaurant Group</span></div>
+        <div style="font-size:20px;font-weight:700;color:#1B1F4B;margin-top:14px">Store Analysis</div>
+        <div style="font-size:13px;color:#6B7280">Acceso restringido. Información confidencial.</div>
+      </div>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:#1B1F4B">Contraseña
+        <input type="password" value="{{ pw }}" onChange="{{ onPw }}" autoFocus="{{ true }}" autoComplete="current-password" style="height:44px;border:1px solid #E5E7EB;border-radius:10px;padding:0 14px;font:inherit;font-size:15px;font-weight:400;color:#1B1F4B;outline:none" style-focus="border-color:#7DC142;box-shadow:0 0 0 3px rgba(125,193,66,.2)">
+      </label>
+      <sc-if value="{{ hasLoginErr }}" hint-placeholder-val="{{ false }}">
+        <div role="alert" style="font-size:13px;color:#B91C1C;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:8px 12px">{{ loginErr }}</div>
+      </sc-if>
+      <button type="submit" style="height:44px;border:none;border-radius:10px;background:#14163A;color:#fff;font:inherit;font-weight:600;font-size:15px;cursor:pointer" style-hover="background:#25285C">{{ loginBtnLabel }}</button>
+      <sc-if value="{{ hasDemoHint }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12px;color:#6B7280;text-align:center">{{ demoHint }}</div>
+      </sc-if>
+    </form>
+  </div>
+</sc-if>
+
+<sc-if value="{{ showApp }}" hint-placeholder-val="{{ true }}">
+  <header style="position:sticky;top:0;z-index:30;background:#14163A;color:#fff;display:flex;flex-wrap:wrap;align-items:center;column-gap:20px;padding:0 20px">
+    <div style="display:flex;align-items:baseline;gap:6px;height:56px;align-items:center;white-space:nowrap"><span style="font-weight:800;letter-spacing:.1em;font-size:16px">FUSION</span><span style="font-size:12.5px;color:#C7C9E0">Restaurant Group</span></div>
+    <nav style="display:flex;gap:2px;overflow-x:auto;min-width:0;flex:{{ tabsFlex }};order:{{ tabsOrder }}">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+        <button onClick="{{ t.select }}" aria-current="{{ t.current }}" style="background:none;border:none;border-bottom:3px solid {{ t.underline }};color:{{ t.color }};font:inherit;font-size:13.5px;font-weight:600;padding:0 14px;height:52px;cursor:pointer;white-space:nowrap" style-hover="color:#fff">{{ t.label }}</button>
+      </sc-for>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px;margin-left:auto;order:2;height:56px">
+      <span style="font-size:12px;color:#C7C9E0;white-space:nowrap">{{ updatedLabel }}</span>
+      <button onClick="{{ refresh }}" title="Actualizar" aria-label="Actualizar datos" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(255,255,255,.1)">↻</button>
+      <button onClick="{{ logout }}" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,.1)">Salir</button>
+    </div>
+  </header>
+
+  <main style="max-width:1600px;margin:0 auto;padding:18px 20px 40px;display:flex;flex-direction:column;gap:16px">
+
+    <section aria-label="Filtros" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px">
+      <div style="background:#fff;border-radius:12px;border-top:4px solid #F2C94C;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">Filtrar por Marca</span><span style="font-size:11.5px;color:#6B7280">{{ brandCount }}</span></div>
+        <div style="height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer;font-weight:500"><input type="checkbox" checked="{{ allBrands }}" onChange="{{ toggleAllBrands }}" style="accent-color:#14163A;margin:0">Select all</label>
+          <sc-for list="{{ brandsList }}" as="b" hint-placeholder-count="4">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer"><input type="checkbox" checked="{{ b.checked }}" onChange="{{ b.toggle }}" style="accent-color:#14163A;margin:0"><span style="width:10px;height:10px;border-radius:3px;background:{{ b.color }};flex:none"></span>{{ b.name }}</label>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:#fff;border-radius:12px;border-top:4px solid #F2C94C;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">Filtrar por Tiendas</span><span style="display:flex;gap:10px;align-items:baseline"><span style="font-size:11.5px;color:#6B7280">{{ storeCount }}</span><button onClick="{{ clearStores }}" style="border:none;background:none;padding:0;color:#3F4DB8;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline">limpiar</button></span></div>
+        <input type="search" placeholder="Buscar tienda…" value="{{ storeQ }}" onChange="{{ onStoreQ }}" style="height:30px;border:1px solid #E5E7EB;border-radius:8px;padding:0 10px;font:inherit;font-size:12.5px;color:#1B1F4B;outline:none" style-focus="border-color:#7DC142">
+        <div style="height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer;font-weight:500"><input type="checkbox" checked="{{ allStores }}" onChange="{{ toggleAllStores }}" style="accent-color:#14163A;margin:0">Select all</label>
+          <sc-for list="{{ storesList }}" as="s" hint-placeholder-count="5">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer"><input type="checkbox" checked="{{ s.checked }}" onChange="{{ s.toggle }}" style="accent-color:#14163A;margin:0"><span style="width:8px;height:8px;border-radius:50%;background:{{ s.color }};flex:none"></span>{{ s.name }}</label>
+          </sc-for>
+          <sc-if value="{{ noStores }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#6B7280;padding:4px 0">Sin coincidencias</div></sc-if>
+        </div>
+      </div>
+
+      <div style="background:#fff;border-radius:12px;border-top:4px solid #F2C94C;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">Filtrar por Semanas</span><span style="display:flex;gap:10px;align-items:baseline"><span style="font-size:11.5px;color:#6B7280">{{ weekCount }}</span><button onClick="{{ clearWeeks }}" style="border:none;background:none;padding:0;color:#3F4DB8;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline">limpiar</button></span></div>
+        <div style="height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ weeksList }}" as="w" hint-placeholder-count="5">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer"><input type="checkbox" checked="{{ w.checked }}" onChange="{{ w.toggle }}" style="accent-color:#14163A;margin:0">{{ w.label }}</label>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ hasBanner }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#FFF4E5;border:1px solid #FBD38D;color:#8A4B00;border-radius:10px;padding:10px 14px;font-size:13px">
+        <span>{{ banner }}</span>
+        <button onClick="{{ closeBanner }}" aria-label="Cerrar aviso" style="border:none;background:none;color:#8A4B00;font-size:16px;cursor:pointer;padding:0 4px">×</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px" aria-busy="true">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+          <sc-for list="{{ skel }}" as="k" hint-placeholder-count="7"><div style="height:92px;border-radius:12px;background:#E9EBF2"></div></sc-for>
+        </div>
+        <div style="height:380px;border-radius:12px;background:#E9EBF2;display:flex;align-items:center;justify-content:center;color:#6B7280;font-size:13px">Cargando datos…</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border-radius:12px;border:1px solid #FECACA;padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="font-size:15px;font-weight:600;color:#B91C1C">No se pudieron cargar los datos</div>
+        <div style="font-size:13px;color:#6B7280">{{ errorMsg }}</div>
+        <button onClick="{{ retry }}" style="height:36px;padding:0 16px;border:none;border-radius:8px;background:#14163A;color:#fff;font:inherit;font-weight:600;cursor:pointer">Reintentar</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showContext }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:#6B7280">
+        <span>{{ curLabelTitle }} <strong style="color:#1B1F4B;font-weight:600">{{ curWeekLabel }}</strong></span>
+        <sc-if value="{{ showPrevLabel }}" hint-placeholder-val="{{ false }}"><span>Gráficos: <strong style="color:#1B1F4B;font-weight:600">{{ prevWeekLabel }}</strong></span></sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:{{ kpiCols }};gap:12px">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="7">
+          <div style="background:{{ k.bg }};border:1px solid {{ k.border }};border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0">
+            <span style="font-size:11.5px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.label }}</span>
+            <span style="font-size:26px;font-weight:700;line-height:1.1;color:{{ k.color }};white-space:nowrap">{{ k.value }}</span>
+            <span style="font-size:11.5px;color:#6B7280">{{ k.sub }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Ventas{{ cmpSuffix }}</h3>
+        {{ chHomeSales }}
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFclc }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Food Cost{{ cmpSuffix }}</h3>
+        {{ chFc }}
+      </div>
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Labor Cost{{ cmpSuffix }}</h3>
+        {{ chLc }}
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isComp }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Compras{{ cmpSuffix }}</h3>
+        {{ chPurch }}
+      </div>
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Tendencia: Ventas y Compras</h3>
+        {{ chTrendSP }}
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLcinv }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Tendencias: Labor Cost %</h3>
+        {{ chLcTrend }}
+      </div>
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">Inventarios</h3>
+        {{ chInv }}
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSum }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px">
+        <h2 style="margin:0;font-size:18px;font-weight:700">Summary por marca</h2>
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:6px 10px;font-size:12.5px;flex-wrap:nowrap;white-space:nowrap;max-width:100%;overflow-x:auto">
+          <span style="color:#6B7280">WEEKENDING</span>
+          <select value="{{ sumFrom }}" onChange="{{ onSumFrom }}" aria-label="Desde" style="height:30px;border:1px solid #E5E7EB;border-radius:6px;font:inherit;font-size:12.5px;color:#1B1F4B;background:#fff;padding:0 6px">
+            <sc-for list="{{ sumWeeks }}" as="o" hint-placeholder-count="1"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <span style="color:#6B7280">a</span>
+          <select value="{{ sumTo }}" onChange="{{ onSumTo }}" aria-label="Hasta" style="height:30px;border:1px solid #E5E7EB;border-radius:6px;font:inherit;font-size:12.5px;color:#1B1F4B;background:#fff;padding:0 6px">
+            <sc-for list="{{ sumWeeks }}" as="o" hint-placeholder-count="1"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3 style="margin:0;font-size:15px;font-weight:600">AVG Sales by Weekending</h3>
+        {{ chSumSales }}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">AVG of Food Cost by Weekending</h3>
+          {{ chSumFc }}
+        </div>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">AVG of Labor by Weekending</h3>
+          {{ chSumLc }}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px">
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Avg of SALES</h3>
+          {{ chDonutSales }}
+        </div>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Avg FOODCOST</h3>
+          {{ chDonutFc }}
+        </div>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Avg BEGINNINV and ENDINGINV</h3>
+          {{ chInvBrand }}
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPend }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+        <div style="flex:1 1 560px;min-width:0;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);overflow:hidden">
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
+              <thead>
+                <tr style="background:#111111;color:#fff;text-align:left">
+                  <th style="padding:11px 14px;font-weight:600;font-size:12px;letter-spacing:.04em">STORE</th>
+                  <th style="padding:11px 14px;font-weight:600;font-size:12px;letter-spacing:.04em">Estado Reporte</th>
+                  <th style="padding:11px 14px;font-weight:600;font-size:12px;letter-spacing:.04em">Última Semana Reportada</th>
+                  <th style="padding:11px 14px;font-weight:600;font-size:12px;letter-spacing:.04em;text-align:right">Semanas Sin Reportar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{ pendRows }}" as="r" hint-placeholder-count="8">
+                  <tr style="background:{{ r.rowBg }};border-bottom:1px solid #EEF0F4">
+                    <td style="padding:9px 14px;background:{{ r.storeBg }};font-weight:600;color:#0B1A12">{{ r.store }}</td>
+                    <td style="padding:9px 14px;color:{{ r.statusColor }};font-weight:{{ r.statusWeight }}">{{ r.status }}</td>
+                    <td style="padding:9px 14px">{{ r.last }}</td>
+                    <td style="padding:9px 14px;text-align:right">{{ r.missing }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <sc-if value="{{ noPendRows }}" hint-placeholder-val="{{ false }}"><div style="padding:40px;text-align:center;color:#6B7280;font-size:13px">Sin datos para los filtros seleccionados</div></sc-if>
+          </div>
+        </div>
+        <aside style="flex:{{ pendAsideFlex }};display:flex;flex-direction:column;gap:12px">
+          <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:18px 20px;display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.04em">Total de Tiendas</span>
+            <span style="font-size:44px;font-weight:800;color:#2563EB;line-height:1.05">{{ pendTotal }}</span>
+          </div>
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:600;color:#166534">Total Completadas</span>
+            <span style="font-size:26px;font-weight:700;color:#15803D">{{ pendDone }}</span>
+          </div>
+          <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:600;color:#991B1B">Total Pendientes</span>
+            <span style="font-size:26px;font-weight:700;color:#DC2626">{{ pendPending }}</span>
+          </div>
+          <p style="margin:0;font-size:11.5px;line-height:1.5;color:#6B7280;text-wrap:pretty">Semana de referencia: {{ pendRef }}.<br>Excluidas (cerradas): {{ pendExcluded }}.</p>
+        </aside>
+      </div>
+    </sc-if>
+
+  </main>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;skipLogin&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;fclc&quot;,&quot;comp&quot;,&quot;lcinv&quot;,&quot;sum&quot;,&quot;pend&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const h = React.createElement;
+const NAVY = '#14163A', MUTED = '#6B7280', GRID = '#EEF0F4';
+const MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const FALLBACK_CFG = { refreshMinutes: 10, brandOrder: ['ACAI','GONGCHA','Subway','Wingstop'], brands: { ACAI:{label:'ACAI',color:'#5B0F6E'}, GONGCHA:{label:'GONGCHA',color:'#C8102E'}, Subway:{label:'Subway',color:'#E3C934'}, Wingstop:{label:'Wingstop',color:'#2DC937'} }, closedStores: [] };
+const TABS = [['home','Home'],['fclc','FC / LC'],['comp','Comp / Vent'],['lcinv','LC% / Inv'],['sum','Summary'],['pend','Pendientes']];
+
+function pd(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function longDate(s) { if (!s) return '—'; const d = pd(s); return `${DIAS[d.getDay()]}, ${d.getDate()} de ${MES[d.getMonth()]} de ${d.getFullYear()}`; }
+function shortDate(s) { const d = pd(s); return `${d.getDate()} ${MES[d.getMonth()].slice(0, 3)}`; }
+function shortDateY(s) { const d = pd(s); return `${d.getDate()} ${MES[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`; }
+function mdy(s) { if (!s) return '—'; const d = pd(s); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
+const avg = (a, f) => a.length ? a.reduce((s, r) => s + f(r), 0) / a.length : null;
+const fmtK = v => v == null ? '—' : (v / 1000).toFixed(2) + 'K';
+const fmtMoney = v => v == null ? '—' : '$' + Math.round(v).toLocaleString('en-US');
+const fmtPct = v => v == null ? '—' : v.toFixed(2) + '%';
+const axisK = v => (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'K';
+const axisPct = (v, d) => v.toFixed(d == null ? 1 : d) + '%';
+const stepDec = t => t.length > 1 ? (String(+(t[1] - t[0]).toFixed(6)).split('.')[1] || '').length : 0;
+
+function useWidth() {
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(0);
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const upd = () => setW(el.clientWidth);
+    upd();
+    const ro = new ResizeObserver(upd); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w];
+}
+function niceStep(range, n) {
+  const raw = range / n; const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+}
+function scaleZero(max) {
+  if (!(max > 0)) max = 1;
+  const st = niceStep(max, 5); const hi = Math.ceil(max / st) * st; const ticks = [];
+  for (let v = 0; v <= hi + st / 1e6; v += st) ticks.push(v);
+  return { lo: 0, hi, ticks };
+}
+function scaleFit(min, max) {
+  if (min === max) { min -= 1; max += 1; }
+  const pad = (max - min) * 0.12; const st = niceStep(max - min + 2 * pad, 5);
+  const lo = Math.floor((min - pad) / st) * st, hi = Math.ceil((max + pad) / st) * st; const ticks = [];
+  for (let v = lo; v <= hi + st / 1e6; v += st) ticks.push(v);
+  return { lo, hi, ticks };
+}
+function Empty() {
+  return h('div', { style: { height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: 13, background: '#FAFBFC', borderRadius: 8, border: '1px dashed #E5E7EB' } }, 'Sin datos para los filtros seleccionados');
+}
+function Legend({ items }) {
+  return h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px 18px', fontSize: 12, color: '#1B1F4B' } },
+    items.map(it => h('span', { key: it.name, style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
+      it.dash
+        ? h('svg', { width: 22, height: 8 }, h('line', { x1: 1, y1: 4, x2: 21, y2: 4, stroke: it.color, strokeWidth: 2.5, strokeDasharray: '5 3' }))
+        : it.line
+          ? h('svg', { width: 18, height: 10 }, h('line', { x1: 1, y1: 5, x2: 17, y2: 5, stroke: it.color, strokeWidth: 2.5 }), h('circle', { cx: 9, cy: 5, r: 3, fill: it.color }))
+          : h('span', { style: { width: 10, height: 10, borderRadius: 3, background: it.color } }),
+      it.name)));
+}
+function TipBox({ tip, w, title, rows }) {
+  const right = tip.x > w / 2;
+  return h('div', { style: { position: 'absolute', left: tip.x + (right ? -14 : 14), top: Math.max(0, tip.y - 24), transform: right ? 'translateX(-100%)' : 'none', background: NAVY, color: '#fff', borderRadius: 8, padding: '8px 11px', fontSize: 12, pointerEvents: 'none', boxShadow: '0 8px 24px rgba(8,8,30,.28)', zIndex: 5, minWidth: 150, whiteSpace: 'nowrap' } },
+    h('div', { style: { fontWeight: 600, marginBottom: 5 } }, title),
+    rows.map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 8, lineHeight: '19px' } },
+      h('span', { style: { width: 8, height: 8, borderRadius: 2, background: r.color, flex: 'none' } }),
+      h('span', { style: { color: '#C7C9E0', flex: 1 } }, r.name),
+      h('span', { style: { fontWeight: 600, marginLeft: 12 } }, r.value))));
+}
+
+function BarChart(p) {
+  const [ref, w] = useWidth();
+  const [tip, setTip] = React.useState(null);
+  const cats = p.cats || [];
+  if (!cats.length) return h(Empty);
+  const rotate = p.rotate !== false, plotH = p.height || 260, padT = 12, labH = rotate ? 100 : 30, H = padT + plotH + labH, axisW = 50;
+  const goals = p.goals || {}, BC = p.brands || {};
+  let max = 0;
+  cats.forEach(c => c.values.forEach(v => { if (v != null && v > max) max = v; }));
+  const runs = [];
+  cats.forEach((c, i) => {
+    const g = goals[c.brand]; if (g == null) return;
+    if (g > max) max = g;
+    const last = runs[runs.length - 1];
+    if (last && last.brand === c.brand && last.i1 === i - 1) last.i1 = i;
+    else runs.push({ brand: c.brand, g, i0: i, i1: i });
+  });
+  const sc = scaleZero(max * 1.05);
+  const G = rotate ? 34 : 0;
+  const innerW = Math.max(Math.max(0, w - axisW - G), cats.length * (p.minBand || 38));
+  const band = innerW / cats.length;
+  const y = v => padT + plotH - (v / sc.hi) * plotH;
+  const ns = p.series.length, gw = Math.min(band * 0.76, p.maxGroup || 60), bw = gw / ns;
+  const goalBrands = [...new Set(runs.map(r => r.brand))];
+  const legend = p.series.map(s => ({ name: s.name, color: s.color })).concat(goalBrands.map(b => ({ name: 'Meta ' + (BC[b] ? BC[b].label : b), color: BC[b] ? BC[b].color : '#999', dash: true })));
+  const onMove = e => {
+    const svg = e.currentTarget.getBoundingClientRect(), wr = ref.current.getBoundingClientRect();
+    const i = Math.floor((e.clientX - svg.left - G) / band);
+    if (i < 0 || i >= cats.length) return setTip(null);
+    setTip({ i, x: e.clientX - wr.left, y: e.clientY - wr.top });
+  };
+  const tc = tip && cats[tip.i];
+  return h('div', { ref, style: { position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', gap: 10 } },
+    h(Legend, { items: legend }),
+    h('div', { style: { display: 'flex', minWidth: 0 } },
+      h('svg', { width: axisW, height: H, style: { flex: 'none' } },
+        sc.ticks.map(t => h('text', { key: t, x: axisW - 8, y: y(t) + 4, textAnchor: 'end', fontSize: 11, fill: MUTED }, p.axisFmt(t, stepDec(sc.ticks))))),
+      h('div', { style: { flex: 1, minWidth: 0, overflowX: 'auto' } },
+        h('svg', { width: innerW + G, height: H, onMouseMove: onMove, onMouseLeave: () => setTip(null), style: { display: 'block' } }, h('g', { transform: `translate(${G},0)` },
+          sc.ticks.map(t => h('line', { key: t, x1: 0, x2: innerW, y1: y(t), y2: y(t), stroke: t === 0 ? '#D1D5DB' : GRID })),
+          tip && h('rect', { x: tip.i * band, y: padT, width: band, height: plotH, fill: '#14163A', opacity: 0.04 }),
+          cats.map((c, i) => h('g', { key: c.label },
+            c.values.map((v, k) => v == null ? null : h('rect', { key: k, x: i * band + (band - gw) / 2 + k * bw + 0.5, y: y(Math.max(v, 0)), width: Math.max(1, bw - 1), height: Math.max(0, y(0) - y(Math.max(v, 0))), rx: 2.5, fill: p.series[k].color })),
+            rotate
+              ? h('text', { x: i * band + band / 2 + 3, y: padT + plotH + 12, textAnchor: 'end', fontSize: 10.5, fill: '#374151', transform: `rotate(-60 ${i * band + band / 2 + 3} ${padT + plotH + 12})` }, c.label.length > 18 ? c.label.slice(0, 17) + '…' : c.label)
+              : h('text', { x: i * band + band / 2, y: padT + plotH + 18, textAnchor: 'middle', fontSize: 11.5, fill: '#374151' }, c.label))),
+          runs.map((r, k) => h('line', { key: 'g' + k, x1: r.i0 * band + 2, x2: (r.i1 + 1) * band - 2, y1: y(r.g), y2: y(r.g), stroke: BC[r.brand] ? BC[r.brand].color : '#999', strokeWidth: 2.5, strokeDasharray: '6 4', strokeLinecap: 'round' })))))),
+    tc && h(TipBox, { tip, w, title: tc.label, rows: p.series.map((s, k) => ({ name: s.name, color: s.color, value: p.fmt(tc.values[k]) })).concat(goals[tc.brand] != null ? [{ name: 'Meta ' + (BC[tc.brand] ? BC[tc.brand].label : ''), color: BC[tc.brand] ? BC[tc.brand].color : '#999', value: p.fmt(goals[tc.brand]) }] : []) }));
+}
+
+function LineChart(p) {
+  const [ref, w] = useWidth();
+  const [tip, setTip] = React.useState(null);
+  const xs = p.xs || [];
+  const all = [];
+  p.series.forEach(s => s.values.forEach(v => { if (v != null) all.push(v); }));
+  if (!xs.length || !all.length) return h(Empty);
+  const H = p.height || 250, padL = 52, padR = 18, padT = 12, padB = 30, W = Math.max(w, 280);
+  const mx = Math.max(...all), mn = Math.min(...all);
+  const sc = p.zero ? scaleZero(mx * 1.05) : scaleFit(mn, mx);
+  const pw = W - padL - padR;
+  const x = i => xs.length === 1 ? padL + pw / 2 : padL + i * pw / (xs.length - 1);
+  const y = v => padT + (1 - (v - sc.lo) / (sc.hi - sc.lo)) * (H - padT - padB);
+  const base = y(sc.lo);
+  const segs = vals => { const out = []; let cur = []; vals.forEach((v, i) => { if (v == null) { if (cur.length) out.push(cur); cur = []; } else cur.push([x(i), y(v)]); }); if (cur.length) out.push(cur); return out; };
+  const every = Math.max(1, Math.ceil(xs.length / Math.max(1, Math.floor(pw / 62))));
+  const onMove = e => {
+    const r = ref.current.getBoundingClientRect(); const mxp = e.clientX - r.left;
+    const i = xs.length === 1 ? 0 : Math.round((mxp - padL) / (pw / (xs.length - 1)));
+    if (i < 0 || i >= xs.length) return setTip(null);
+    setTip({ i, x: x(i), y: e.clientY - r.top });
+  };
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+    h(Legend, { items: p.series.map(s => ({ name: s.name, color: s.color, line: true })) }),
+    h('div', { ref, style: { position: 'relative', width: '100%' } },
+      h('svg', { width: '100%', height: H, viewBox: `0 0 ${W} ${H}`, onMouseMove: onMove, onMouseLeave: () => setTip(null), style: { display: 'block', overflow: 'visible' } },
+        sc.ticks.map(t => h('g', { key: t },
+          h('line', { x1: padL, x2: W - padR, y1: y(t), y2: y(t), stroke: GRID }),
+          h('text', { x: padL - 8, y: y(t) + 4, textAnchor: 'end', fontSize: 11, fill: MUTED }, p.axisFmt(t, stepDec(sc.ticks))))),
+        xs.map((d, i) => i % every === 0 ? h('text', { key: d, x: x(i), y: H - 10, textAnchor: 'middle', fontSize: 11, fill: MUTED }, shortDate(d)) : null),
+        p.series.map(s => h('g', { key: s.name },
+          s.area && segs(s.values).map((sg, k) => h('path', { key: 'a' + k, d: `M${sg[0][0]} ${base}` + sg.map(q => `L${q[0]} ${q[1]}`).join('') + `L${sg[sg.length - 1][0]} ${base}Z`, fill: s.color, opacity: 0.22 })),
+          segs(s.values).map((sg, k) => h('path', { key: 'l' + k, d: sg.map((q, j) => (j ? 'L' : 'M') + q[0] + ' ' + q[1]).join(''), fill: 'none', stroke: s.color, strokeWidth: 2.2, strokeLinejoin: 'round' })),
+          p.markers && s.values.map((v, i) => v == null ? null : h('circle', { key: i, cx: x(i), cy: y(v), r: 3, fill: s.color })))),
+        tip && h('line', { x1: tip.x, x2: tip.x, y1: padT, y2: base, stroke: NAVY, strokeWidth: 1, strokeDasharray: '3 3', opacity: 0.6 }),
+        tip && p.series.map(s => s.values[tip.i] == null ? null : h('circle', { key: s.name, cx: tip.x, cy: y(s.values[tip.i]), r: 4.5, fill: s.color, stroke: '#fff', strokeWidth: 2 }))),
+      tip && h(TipBox, { tip, w: W, title: longDate(xs[tip.i]), rows: p.series.map(s => ({ name: s.name, color: s.color, value: p.fmt(s.values[tip.i]) })) })));
+}
+
+function arcPath(cx, cy, R, r, a0, a1) {
+  if (a1 - a0 >= Math.PI * 2) a1 = a0 + Math.PI * 2 - 0.0001;
+  const L = a1 - a0 > Math.PI ? 1 : 0, P = (rad, a) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)];
+  const [x0, y0] = P(R, a0), [x1, y1] = P(R, a1), [x2, y2] = P(r, a1), [x3, y3] = P(r, a0);
+  return `M${x0} ${y0}A${R} ${R} 0 ${L} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${L} 0 ${x3} ${y3}Z`;
+}
+function Donut(p) {
+  const ref = React.useRef(null);
+  const [tip, setTip] = React.useState(null);
+  const items = (p.items || []).filter(it => it.value > 0);
+  if (!items.length) return h(Empty);
+  const total = items.reduce((s, it) => s + it.value, 0);
+  const W = 320, H = 230, cx = W / 2, cy = H / 2, R = 78, r = 50;
+  let a = -Math.PI / 2;
+  const sl = items.map(it => { const a0 = a; a += it.value / total * Math.PI * 2; return Object.assign({}, it, { a0, a1: a, pct: it.value / total * 100 }); });
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+    h(Legend, { items: items.map(it => ({ name: it.name, color: it.color })) }),
+    h('div', { ref, style: { position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto' } },
+      h('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', style: { display: 'block', overflow: 'visible' } },
+        sl.map((s, i) => {
+          const m = (s.a0 + s.a1) / 2, c = Math.cos(m), sn = Math.sin(m);
+          const lx = cx + (R + 20) * c, ly = cy + (R + 20) * sn;
+          return h('g', { key: s.name, onMouseMove: e => { const b = ref.current.getBoundingClientRect(); setTip({ i, x: e.clientX - b.left, y: e.clientY - b.top }); }, onMouseLeave: () => setTip(null), style: { cursor: 'default' } },
+            h('path', { d: arcPath(cx, cy, tip && tip.i === i ? R + 4 : R, r, s.a0, s.a1), fill: s.color, stroke: '#fff', strokeWidth: 2 }),
+            h('line', { x1: cx + (R + 3) * c, y1: cy + (R + 3) * sn, x2: cx + (R + 14) * c, y2: cy + (R + 14) * sn, stroke: '#9CA3AF' }),
+            h('text', { x: lx, y: ly + 4, textAnchor: c >= 0 ? 'start' : 'end', fontSize: 11.5, fill: '#1B1F4B', fontWeight: 500 }, p.labelFor(s)));
+        })),
+      tip && h(TipBox, { tip, w: 360, title: sl[tip.i].name, rows: [{ name: p.valueName || 'Valor', color: sl[tip.i].color, value: p.fmt(sl[tip.i].value) }, { name: '% del total', color: sl[tip.i].color, value: sl[tip.i].pct.toFixed(1) + '%' }].concat(p.extraRow ? [p.extraRow(sl[tip.i])] : []) })));
+}
+
+class Component extends DCLogic {
+  state = { phase: 'boot', pw: '', loginErr: '', loggingIn: false, rows: [], updatedAt: null, error: '', tab: null, brandSel: null, storeSel: null, weekSel: new Set(), storeQ: '', banner: '', vw: typeof window !== 'undefined' ? window.innerWidth : 1440, sumFrom: '', sumTo: '', refreshing: false };
+
+  cfg() { return window.FUSION_CONFIG || FALLBACK_CFG; }
+
+  componentDidMount() {
+    this._onResize = () => this.setState({ vw: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+    this.boot();
+  }
+  componentWillUnmount() { this._dead = true; window.removeEventListener('resize', this._onResize); clearInterval(this._timer); }
+
+  async boot() {
+    for (let i = 0; i < 100 && !(window.FusionAPI && window.FUSION_CONFIG); i++) await new Promise(r => setTimeout(r, 50));
+    if (!window.FusionAPI) return this.setState({ phase: 'error', error: 'No se pudo cargar api.js.' });
+    let authed = false;
+    try { authed = sessionStorage.getItem('fusion_auth') === '1'; } catch (e) {}
+    if (this.props.skipLogin || authed) this.load(); else this.setState({ phase: 'login' });
+  }
+  startTimer() { clearInterval(this._timer); this._timer = setInterval(() => this.load(true), (this.cfg().refreshMinutes || 10) * 60000); }
+  async load(silent) {
+    if (silent) this.setState({ refreshing: true });
+    else this.setState({ phase: this.state.rows.length ? 'ready' : 'loading', refreshing: true });
+    try {
+      const d = await window.FusionAPI.getData();
+      if (this._dead) return;
+      this.setState({ rows: d.rows, updatedAt: d.updatedAt, phase: 'ready', refreshing: false, banner: d.rows.length ? '' : 'La API no devolvió reportes.' });
+      this.startTimer();
+    } catch (e) {
+      if (e && e.code === 401) return this.logout('Tu sesión expiró. Entra de nuevo.');
+      if (this.state.rows.length) this.setState({ refreshing: false, banner: 'No se pudo actualizar: ' + (e.message || e) + '. Se muestran los últimos datos cargados.' });
+      else this.setState({ phase: 'error', refreshing: false, error: (e && e.message) || 'Error desconocido.' });
+    }
+  }
+  async doLogin() {
+    if (!this.state.pw) return this.setState({ loginErr: 'Escribe la contraseña.' });
+    this.setState({ loggingIn: true, loginErr: '' });
+    try {
+      const r = await window.FusionAPI.login(this.state.pw);
+      if (r.ok) { try { sessionStorage.setItem('fusion_auth', '1'); } catch (e) {} this.setState({ loggingIn: false, pw: '' }); this.load(); }
+      else this.setState({ loggingIn: false, loginErr: r.error || 'Contraseña incorrecta.' });
+    } catch (e) { this.setState({ loggingIn: false, loginErr: 'No se pudo conectar con el servidor.' }); }
+  }
+  logout(msg) {
+    try { sessionStorage.removeItem('fusion_auth'); } catch (e) {}
+    clearInterval(this._timer);
+    if (window.FusionAPI && window.FusionAPI.logout) window.FusionAPI.logout();
+    this.setState({ phase: 'login', loginErr: typeof msg === 'string' ? msg : '', pw: '' });
+  }
+
+  renderVals() {
+    const S = this.state, C = this.cfg(), B = C.brands, order = C.brandOrder;
+    const tab = S.tab || this.props.startTab || 'home';
+    const narrow = S.vw < 1000;
+    const ready = S.phase === 'ready';
+    const brandSel = S.brandSel || new Set(order);
+    const rows = S.rows;
+    const allWeeks = [...new Set(rows.map(r => r.week))].sort().reverse();
+
+    // Filtros
+    const storesOfBrands = [...new Set(rows.filter(r => brandSel.has(r.brand)).map(r => r.store))].sort((a, b) => a.localeCompare(b, 'es'));
+    const storeOn = s => S.storeSel == null || S.storeSel.has(s);
+    const q = S.storeQ.trim().toLowerCase();
+    const storeVis = storesOfBrands.filter(s => !q || s.toLowerCase().includes(q));
+    const brandOf = s => (window.FusionAPI ? window.FusionAPI.brandOf(s) : 'Subway');
+    const toggleStore = s => {
+      const base = S.storeSel == null ? new Set(storesOfBrands) : new Set(S.storeSel);
+      base.has(s) ? base.delete(s) : base.add(s);
+      this.setState({ storeSel: storesOfBrands.every(x => base.has(x)) ? null : base });
+    };
+    const F = rows.filter(r => brandSel.has(r.brand) && storeOn(r.store));
+    const selWeeks = [...S.weekSel].filter(w => allWeeks.includes(w)).sort().reverse();
+    const curWeek = selWeeks[0] || allWeeks[0] || null;
+    const prevWeek = curWeek ? allWeeks[allWeeks.indexOf(curWeek) + 1] || null : null;
+    const cur = F.filter(r => r.week === curWeek), prev = F.filter(r => r.week === prevWeek);
+    const nStoresOn = storesOfBrands.filter(storeOn).length;
+
+    const out = {
+      showBoot: S.phase === 'boot', showLogin: S.phase === 'login', showApp: S.phase !== 'boot' && S.phase !== 'login',
+      pw: S.pw, onPw: e => this.setState({ pw: e.target.value, loginErr: '' }),
+      onLogin: e => { e.preventDefault(); this.doLogin(); },
+      loginErr: S.loginErr, hasLoginErr: !!S.loginErr, loginBtnLabel: S.loggingIn ? 'Verificando…' : 'Entrar',
+      hasDemoHint: !!(window.FusionAPI && window.FusionAPI.isDemo()), demoHint: 'Modo demo · contraseña: ' + (C.demoPassword || ''),
+      tabs: TABS.map(([k, label]) => ({ label, current: k === tab ? 'page' : undefined, color: k === tab ? '#fff' : '#A9ACCB', underline: k === tab ? '#7DC142' : 'transparent', select: () => this.setState({ tab: k }) })),
+      tabsFlex: narrow ? '1 1 100%' : '1 1 auto', tabsOrder: narrow ? 3 : 1,
+      updatedLabel: S.refreshing ? 'Actualizando…' : S.updatedAt ? 'Actualizado ' + new Date(S.updatedAt).toLocaleTimeString('es-PR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
+      refresh: () => this.load(true), logout: () => this.logout(), retry: () => this.load(),
+      isLoading: S.phase === 'loading', isError: S.phase === 'error', errorMsg: S.error,
+      skel: [1, 2, 3, 4, 5, 6, 7],
+      hasBanner: !!S.banner, banner: S.banner, closeBanner: () => this.setState({ banner: '' }),
+
+      brandCount: `${brandSel.size} de ${order.length}`,
+      allBrands: brandSel.size === order.length,
+      toggleAllBrands: () => this.setState({ brandSel: brandSel.size === order.length ? new Set() : null }),
+      brandsList: order.map(b => ({ name: B[b].label, color: B[b].color, checked: brandSel.has(b), toggle: () => { const n = new Set(brandSel); n.has(b) ? n.delete(b) : n.add(b); this.setState({ brandSel: n.size === order.length ? null : n }); } })),
+      storeQ: S.storeQ, onStoreQ: e => this.setState({ storeQ: e.target.value }),
+      storeCount: `${nStoresOn} de ${storesOfBrands.length}`,
+      allStores: S.storeSel == null,
+      toggleAllStores: () => this.setState({ storeSel: S.storeSel == null ? new Set() : null }),
+      clearStores: () => this.setState({ storeSel: null, storeQ: '' }),
+      storesList: storeVis.map(s => ({ name: s, color: (B[brandOf(s)] || {}).color, checked: storeOn(s), toggle: () => toggleStore(s) })),
+      noStores: storeVis.length === 0,
+      weekCount: selWeeks.length ? `${selWeeks.length} seleccionada${selWeeks.length > 1 ? 's' : ''}` : 'Última semana',
+      clearWeeks: () => this.setState({ weekSel: new Set() }),
+      weeksList: allWeeks.map(w => ({ label: longDate(w), checked: S.weekSel.has(w), toggle: () => { const n = new Set(S.weekSel); n.has(w) ? n.delete(w) : n.add(w); this.setState({ weekSel: n }); } })),
+
+      showContext: ready && tab !== 'sum' && tab !== 'pend',
+      curWeekLabel: longDate(curWeek), prevWeekLabel: prevWeek ? longDate(prevWeek) : 'sin datos',
+      isHome: ready && tab === 'home', isFclc: ready && tab === 'fclc', isComp: ready && tab === 'comp',
+      isLcinv: ready && tab === 'lcinv', isSum: ready && tab === 'sum', isPend: ready && tab === 'pend',
+      kpiCols: narrow ? 'repeat(3,minmax(0,1fr))' : 'repeat(7,minmax(0,1fr))',
+      pendAsideFlex: narrow ? '1 1 100%' : '0 0 240px'
+    };
+    if (!ready) return out;
+
+    const BCOL = Object.fromEntries(order.map(b => [b, { label: B[b].label, color: B[b].color }]));
+    const CUR = '#BDBDBD';
+    // 1 semana (o sin selección): solo esa semana. 2+ semanas: promedio de lo seleccionado
+    // vs el mismo número de semanas inmediatamente anteriores a la más antigua seleccionada.
+    const multi = selWeeks.length >= 2;
+    const n = selWeeks.length;
+    const kRows = multi ? F.filter(r => S.weekSel.has(r.week)) : cur;
+    const oldest = selWeeks[n - 1];
+    const prevWeeksArr = multi ? allWeeks.slice(allWeeks.indexOf(oldest) + 1, allWeeks.indexOf(oldest) + 1 + n) : [];
+    const prevSet = new Set(prevWeeksArr);
+    const kPrev = multi ? F.filter(r => prevSet.has(r.week)) : prev;
+    const storeAvg = (src, field) => { const m = new Map(); src.forEach(r => { if (!m.has(r.store)) m.set(r.store, []); m.get(r.store).push(r[field]); }); return new Map([...m].map(([k, a]) => [k, a.reduce((s, v) => s + v, 0) / a.length])); };
+    // Gráficos: 1 semana → solo esa semana. 2+ semanas → más reciente vs más antigua de la selección.
+    const firstSel = F.filter(r => r.week === oldest);
+    const barCats = field => {
+      const m1 = storeAvg(cur, field);
+      if (!multi) return [...m1.keys()].sort((a, b) => a.localeCompare(b, 'es')).map(s => ({ label: s, brand: brandOf(s), values: [m1.get(s)] }));
+      const m2 = storeAvg(firstSel, field);
+      return [...new Set([...m1.keys(), ...m2.keys()])].sort((a, b) => a.localeCompare(b, 'es'))
+        .map(s => ({ label: s, brand: brandOf(s), values: [m1.has(s) ? m1.get(s) : null, m2.has(s) ? m2.get(s) : null] }));
+    };
+    const ser = color => multi ? [{ name: shortDateY(curWeek), color }, { name: shortDateY(oldest), color: CUR }] : [{ name: 'Semana', color }];
+    const rangeTxt = arr => arr.length ? `${shortDateY(arr[arr.length - 1])} – ${shortDateY(arr[0])}` : 'sin datos';
+    out.curWeekLabel = multi ? `${n} semanas (${rangeTxt(selWeeks)})` : longDate(curWeek);
+    out.prevWeekLabel = multi ? `${longDate(curWeek)} vs ${longDate(oldest)}` : '';
+    out.showPrevLabel = multi;
+    out.curLabelTitle = multi ? 'Periodo seleccionado:' : 'Semana:';
+    out.cmpSuffix = multi ? ': Actual vs Anterior' : ' por tienda';
+    const trendWeeks = (selWeeks.length >= 2 ? selWeeks : allWeeks).slice().sort();
+    const byWeek = (src, f) => trendWeeks.map(w => { const a = src.filter(r => r.week === w); return a.length ? avg(a, f) : null; });
+    const change = (a, b) => (a == null || b == null || !b) ? null : (a - b) / b * 100;
+    const chg = v => v == null ? { value: '—', color: '#1B1F4B' } : { value: (v >= 0 ? '↑ +' : '↓ ') + v.toFixed(1) + '%', color: v >= 0 ? '#16A34A' : '#DC2626' };
+    const goalsOf = key => Object.fromEntries(order.map(b => [b, B[b][key]]).filter(x => x[1] != null));
+
+    if (tab === 'home') {
+      const sA = avg(kRows, r => r.sales), sP = avg(kPrev, r => r.sales), pA = avg(kRows, r => r.purchases), pP = avg(kPrev, r => r.purchases);
+      const cs = chg(change(sA, sP)), cp = chg(change(pA, pP));
+      const vsTxt = multi ? `vs ${n} semanas previas` : 'vs semana anterior';
+      const avgTxt = multi ? `Promedio · ${n} semanas` : 'Promedio';
+      const card = (label, value, sub, extra) => Object.assign({ label, value, sub, bg: '#fff', border: '#E5E7EB', color: '#1B1F4B' }, extra);
+      out.kpis = [
+        card('AVG Ventas', fmtK(sA), multi ? avgTxt : 'Promedio por tienda'),
+        card('Cambio Ventas', cs.value, vsTxt, { color: cs.color }),
+        card('LABOR COST %', fmtPct(avg(kRows, r => r.lcPct)), avgTxt, { bg: '#F0FDF4', border: '#BBF7D0', color: '#166534' }),
+        card('AVG FoodCost', fmtPct(avg(kRows, r => r.fcPct)), avgTxt),
+        card('Cambio Compras', cp.value, vsTxt, { color: cp.color }),
+        card('Registros', String(kRows.length), multi ? `Reportes en ${n} semanas` : 'Reportes recibidos'),
+        card('AVG Compras', fmtK(pA), multi ? avgTxt : 'Promedio por tienda')
+      ];
+      out.chHomeSales = h(BarChart, { cats: barCats('sales'), series: ser('#6CB4FF'), fmt: fmtMoney, axisFmt: axisK, brands: BCOL });
+    }
+    if (tab === 'fclc') {
+      out.chFc = h(BarChart, { cats: barCats('fcPct'), series: ser('#E5707E'), fmt: fmtPct, axisFmt: axisPct, goals: goalsOf('fcGoal'), brands: BCOL });
+      out.chLc = h(BarChart, { cats: barCats('lcPct'), series: ser('#8C93D9'), fmt: fmtPct, axisFmt: axisPct, goals: goalsOf('lcGoal'), brands: BCOL });
+    }
+    if (tab === 'comp') {
+      out.chPurch = h(BarChart, { cats: barCats('purchases'), series: ser('#A66DBF'), fmt: fmtMoney, axisFmt: axisK, brands: BCOL });
+      out.chTrendSP = h(LineChart, { xs: trendWeeks, zero: true, fmt: fmtMoney, axisFmt: axisK, series: [{ name: 'Compras', color: '#7B2D8E', area: true, values: byWeek(F, r => r.purchases) }, { name: 'Ventas', color: '#3FA765', area: true, values: byWeek(F, r => r.sales) }] });
+    }
+    if (tab === 'lcinv') {
+      out.chLcTrend = h(LineChart, { xs: trendWeeks, zero: false, fmt: fmtPct, axisFmt: axisPct, series: [{ name: 'Labor Cost %', color: '#3F4DB8', area: true, values: byWeek(F, r => r.lcPct) }] });
+      const mb = storeAvg(cur, 'begInv'), me = storeAvg(cur, 'endInv');
+      const ic = [...mb.keys()].sort((a, b) => a.localeCompare(b, 'es')).map(s => ({ label: s, brand: brandOf(s), values: [mb.get(s), me.get(s)] }));
+      out.chInv = h(BarChart, { cats: ic, series: [{ name: 'Inv. Inicio', color: '#F0AE94' }, { name: 'Inv. Final', color: '#2EB5A0' }], fmt: fmtMoney, axisFmt: axisK, brands: BCOL });
+    }
+    if (tab === 'sum') {
+      const asc = allWeeks.slice().sort();
+      const from = asc.includes(S.sumFrom) ? S.sumFrom : asc[0];
+      const to = asc.includes(S.sumTo) ? S.sumTo : asc[asc.length - 1];
+      const lo = from <= to ? from : to, hi = from <= to ? to : from;
+      const xs = asc.filter(w => w >= lo && w <= hi);
+      const RR = F.filter(r => r.week >= lo && r.week <= hi);
+      const bs = order.filter(b => brandSel.has(b) && RR.some(r => r.brand === b));
+      const perBrand = f => bs.map(b => ({ name: B[b].label, color: B[b].color, values: xs.map(w => { const a = RR.filter(r => r.brand === b && r.week === w); return a.length ? avg(a, f) : null; }) }));
+      out.sumWeeks = asc.map(w => ({ value: w, label: shortDateY(w) }));
+      out.sumFrom = from; out.sumTo = to;
+      out.onSumFrom = e => this.setState({ sumFrom: e.target.value });
+      out.onSumTo = e => this.setState({ sumTo: e.target.value });
+      out.chSumSales = h(LineChart, { xs, zero: false, markers: true, fmt: fmtMoney, axisFmt: axisK, series: perBrand(r => r.sales), height: 270 });
+      out.chSumFc = h(LineChart, { xs, zero: false, markers: true, fmt: fmtPct, axisFmt: axisPct, series: perBrand(r => r.fcPct), height: 230 });
+      out.chSumLc = h(LineChart, { xs, zero: false, markers: true, fmt: fmtPct, axisFmt: axisPct, series: perBrand(r => r.lcPct), height: 230 });
+      const agg = bs.map(b => { const a = RR.filter(r => r.brand === b); return { name: B[b].label, color: B[b].color, sales: avg(a, r => r.sales), fc: avg(a, r => r.fc), fcPct: avg(a, r => r.fcPct), beg: avg(a, r => r.begInv), end: avg(a, r => r.endInv) }; });
+      out.chDonutSales = h(Donut, { items: agg.map(a => ({ name: a.name, color: a.color, value: a.sales })), fmt: fmtMoney, valueName: 'Avg Sales', labelFor: s => `${fmtK(s.value)} (${s.pct.toFixed(1)}%)` });
+      out.chDonutFc = h(Donut, { items: agg.map(a => ({ name: a.name, color: a.color, value: a.fc, fcPct: a.fcPct })), fmt: fmtMoney, valueName: 'Avg Food Cost $', labelFor: s => fmtPct(s.fcPct), extraRow: s => ({ name: 'Food Cost %', color: s.color, value: fmtPct(s.fcPct) }) });
+      out.chInvBrand = h(BarChart, { cats: agg.slice().sort((a, b) => b.beg - a.beg).map(a => ({ label: a.name, brand: null, values: [a.beg, a.end] })), series: [{ name: 'BEGINNINV', color: '#7ED88B' }, { name: 'ENDINGINV', color: '#F0C28E' }], fmt: fmtMoney, axisFmt: axisK, rotate: false, minBand: 60, height: 200, brands: BCOL });
+    }
+    if (tab === 'pend') {
+      const closed = new Set(C.closedStores || []);
+      const latest = allWeeks[0];
+      const map = new Map();
+      rows.filter(r => brandSel.has(r.brand) && storeOn(r.store) && !closed.has(r.store)).forEach(r => { if (!map.has(r.store)) map.set(r.store, new Set()); map.get(r.store).add(r.week); });
+      const list = [...map.entries()].map(([store, ws]) => {
+        const sorted = [...ws].sort(), first = sorted[0], last = sorted[sorted.length - 1];
+        return { store, done: ws.has(latest), last, missing: allWeeks.filter(w => w >= first && !ws.has(w)).length };
+      }).sort((a, b) => (a.done - b.done) || (b.missing - a.missing) || a.store.localeCompare(b.store, 'es'));
+      out.pendRows = list.map((r, i) => ({ store: r.store, status: r.done ? '✅ Completado' : '⏳ Pendiente', statusColor: r.done ? '#15803D' : '#DC2626', statusWeight: r.done ? 500 : 700, storeBg: r.done ? '#4EE38B' : '#FCA5A5', rowBg: i % 2 ? '#F9FAFB' : '#fff', last: mdy(r.last), missing: r.missing }));
+      out.noPendRows = list.length === 0;
+      out.pendTotal = list.length;
+      out.pendDone = list.filter(r => r.done).length;
+      out.pendPending = list.filter(r => !r.done).length;
+      out.pendRef = longDate(latest);
+      out.pendExcluded = (C.closedStores || []).join(', ') || 'ninguna';
+    }
+    return out;
+  }
+}
+</script>
+</body>
+</html>
