@@ -31,7 +31,7 @@ a:hover{color:#14163A;}
   <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#14163A 0%,#2A1E5C 55%,#5B0F6E 100%)">
     <form onSubmit="{{ onLogin }}" style="width:100%;max-width:380px;background:#fff;border-radius:16px;padding:36px 32px 28px;box-shadow:0 24px 60px rgba(8,8,30,.35);display:flex;flex-direction:column;gap:18px">
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;align-items:baseline;gap:6px"><span style="font-weight:800;letter-spacing:.1em;font-size:18px;color:#14163A">FUSION</span><span style="font-size:13px;color:#6B7280">Restaurant Group</span></div>
+        <img src="./fusion-logo.png" alt="Fusion Restaurant Group" style="width:100%;max-width:300px;height:auto;display:block;align-self:center">
         <div style="font-size:20px;font-weight:700;color:#1B1F4B;margin-top:14px">Store Analysis</div>
         <div style="font-size:13px;color:#6B7280">Acceso restringido. Información confidencial.</div>
       </div>
@@ -51,7 +51,7 @@ a:hover{color:#14163A;}
 
 <sc-if value="{{ showApp }}" hint-placeholder-val="{{ true }}">
   <header style="position:sticky;top:0;z-index:30;background:#14163A;color:#fff;display:flex;flex-wrap:wrap;align-items:center;column-gap:20px;padding:0 20px">
-    <div style="display:flex;align-items:baseline;gap:6px;height:56px;align-items:center;white-space:nowrap"><span style="font-weight:800;letter-spacing:.1em;font-size:16px">FUSION</span><span style="font-size:12.5px;color:#C7C9E0">Restaurant Group</span></div>
+    <div style="height:56px;display:flex;align-items:center"><div style="background:#fff;border-radius:8px;padding:3px 8px;display:flex;align-items:center"><img src="./fusion-logo.png" alt="Fusion Restaurant Group" style="height:40px;width:auto;display:block"></div></div>
     <nav style="display:flex;gap:2px;overflow-x:auto;min-width:0;flex:{{ tabsFlex }};order:{{ tabsOrder }}">
       <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
         <button onClick="{{ t.select }}" aria-current="{{ t.current }}" style="background:none;border:none;border-bottom:3px solid {{ t.underline }};color:{{ t.color }};font:inherit;font-size:13.5px;font-weight:600;padding:0 14px;height:52px;cursor:pointer;white-space:nowrap" style-hover="color:#fff">{{ t.label }}</button>
@@ -69,7 +69,7 @@ a:hover{color:#14163A;}
     <section aria-label="Filtros" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px">
       <div style="background:#fff;border-radius:12px;border-top:4px solid #F2C94C;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">Filtrar por Marca</span><span style="font-size:11.5px;color:#6B7280">{{ brandCount }}</span></div>
-        <div style="height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+        <div style="flex:1 1 96px;min-height:96px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer;font-weight:500"><input type="checkbox" checked="{{ allBrands }}" onChange="{{ toggleAllBrands }}" style="accent-color:#14163A;margin:0">Select all</label>
           <sc-for list="{{ brandsList }}" as="b" hint-placeholder-count="4">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer"><input type="checkbox" checked="{{ b.checked }}" onChange="{{ b.toggle }}" style="accent-color:#14163A;margin:0"><span style="width:10px;height:10px;border-radius:3px;background:{{ b.color }};flex:none"></span>{{ b.name }}</label>
@@ -80,7 +80,7 @@ a:hover{color:#14163A;}
       <div style="background:#fff;border-radius:12px;border-top:4px solid #F2C94C;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">Filtrar por Tiendas</span><span style="display:flex;gap:10px;align-items:baseline"><span style="font-size:11.5px;color:#6B7280">{{ storeCount }}</span><button onClick="{{ clearStores }}" style="border:none;background:none;padding:0;color:#3F4DB8;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline">limpiar</button></span></div>
         <input type="search" placeholder="Buscar tienda…" value="{{ storeQ }}" onChange="{{ onStoreQ }}" style="height:30px;border:1px solid #E5E7EB;border-radius:8px;padding:0 10px;font:inherit;font-size:12.5px;color:#1B1F4B;outline:none" style-focus="border-color:#7DC142">
-        <div style="height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+        <div style="flex:1 1 96px;min-height:96px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer;font-weight:500"><input type="checkbox" checked="{{ allStores }}" onChange="{{ toggleAllStores }}" style="accent-color:#14163A;margin:0">Select all</label>
           <sc-for list="{{ storesList }}" as="s" hint-placeholder-count="5">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer"><input type="checkbox" checked="{{ s.checked }}" onChange="{{ s.toggle }}" style="accent-color:#14163A;margin:0"><span style="width:8px;height:8px;border-radius:50%;background:{{ s.color }};flex:none"></span>{{ s.name }}</label>
@@ -91,7 +91,7 @@ a:hover{color:#14163A;}
 
       <div style="background:#fff;border-radius:12px;border-top:4px solid #F2C94C;box-shadow:0 1px 3px rgba(20,22,58,.06),0 6px 16px rgba(20,22,58,.04);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">Filtrar por Semanas</span><span style="display:flex;gap:10px;align-items:baseline"><span style="font-size:11.5px;color:#6B7280">{{ weekCount }}</span><button onClick="{{ clearWeeks }}" style="border:none;background:none;padding:0;color:#3F4DB8;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline">limpiar</button></span></div>
-        <div style="height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+        <div style="flex:1 1 96px;min-height:96px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
           <sc-for list="{{ weeksList }}" as="w" hint-placeholder-count="5">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 0;cursor:pointer"><input type="checkbox" checked="{{ w.checked }}" onChange="{{ w.toggle }}" style="accent-color:#14163A;margin:0">{{ w.label }}</label>
           </sc-for>
@@ -568,7 +568,7 @@ class Component extends DCLogic {
       noStores: storeVis.length === 0,
       weekCount: selWeeks.length ? `${selWeeks.length} seleccionada${selWeeks.length > 1 ? 's' : ''}` : 'Última semana',
       clearWeeks: () => this.setState({ weekSel: new Set() }),
-      weeksList: allWeeks.map(w => ({ label: longDate(w), checked: S.weekSel.has(w), toggle: () => { const n = new Set(S.weekSel); n.has(w) ? n.delete(w) : n.add(w); this.setState({ weekSel: n }); } })),
+      weeksList: allWeeks.map(w => ({ label: longDate(w).replace(/^[^,]+, /, ''), checked: S.weekSel.has(w), toggle: () => { const n = new Set(S.weekSel); n.has(w) ? n.delete(w) : n.add(w); this.setState({ weekSel: n }); } })),
 
       showContext: ready && tab !== 'sum' && tab !== 'pend',
       curWeekLabel: longDate(curWeek), prevWeekLabel: prevWeek ? longDate(prevWeek) : 'sin datos',
@@ -667,9 +667,11 @@ class Component extends DCLogic {
     }
     if (tab === 'pend') {
       const closed = new Set(C.closedStores || []);
+      const openOnly = C.openOnly || { GONGCHA: ['rexville'] };
+      const isOpen = r => { const k = openOnly[r.brand]; return !k || k.some(x => r.store.toLowerCase().includes(String(x).toLowerCase())); };
       const latest = allWeeks[0];
       const map = new Map();
-      rows.filter(r => brandSel.has(r.brand) && storeOn(r.store) && !closed.has(r.store)).forEach(r => { if (!map.has(r.store)) map.set(r.store, new Set()); map.get(r.store).add(r.week); });
+      rows.filter(r => brandSel.has(r.brand) && storeOn(r.store) && !closed.has(r.store) && isOpen(r)).forEach(r => { if (!map.has(r.store)) map.set(r.store, new Set()); map.get(r.store).add(r.week); });
       const list = [...map.entries()].map(([store, ws]) => {
         const sorted = [...ws].sort(), first = sorted[0], last = sorted[sorted.length - 1];
         return { store, done: ws.has(latest), last, missing: allWeeks.filter(w => w >= first && !ws.has(w)).length };
@@ -680,7 +682,7 @@ class Component extends DCLogic {
       out.pendDone = list.filter(r => r.done).length;
       out.pendPending = list.filter(r => !r.done).length;
       out.pendRef = longDate(latest);
-      out.pendExcluded = (C.closedStores || []).join(', ') || 'ninguna';
+      out.pendExcluded = [...(C.closedStores || []), ...Object.entries(openOnly).map(([b, k]) => `${(B[b] && B[b].label) || b} excepto ${k.join(', ')}`)].join(', ') || 'ninguna';
     }
     return out;
   }

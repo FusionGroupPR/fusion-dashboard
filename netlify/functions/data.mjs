@@ -30,8 +30,16 @@ export default async (req) => {
       const headers = { Accept: 'application/json' };
       if (process.env.COGNITO_API_KEY) headers.Authorization = 'Bearer ' + process.env.COGNITO_API_KEY;
       const r = await fetch(next, { headers });
-      if (!r.ok) { const t = (await r.text()).slice(0, 300); return json({ error: 'Cognito respondió ' + r.status + (t ? ': ' + t : ''), url: next.replace(/access_token=[^&]+/, 'access_token=***') }, 502); }
+      if (!r.ok) { const t = (await r.text()).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160); return json({ error: 'Cognito respondió ' + r.status + (r.status === 404 ? ' (URL no encontrada: revisa COGNITO_ODATA_URL)' : '') + (t ? ': ' + t : ''), url: next.replace(/access_token=[^&]+/, 'access_token=***') }, 502); }
       const j = await r.json();
+      // Si la URL es la raíz del servicio OData (lista de tablas), seguir a la primera tabla de entradas.
+      if (page === 0 && Array.isArray(j.value) && j.value.length && j.value.every(v => v.kind === 'EntitySet' || (v.url && v.name && Object.keys(v).length <= 4))) {
+        const set = j.value.find(v => /entr/i.test(v.name)) || j.value[0];
+        const u = new URL(next);
+        u.pathname = u.pathname.replace(/\/$/, '') + '/' + set.url;
+        next = u.toString();
+        continue;
+      }
       entries.push(...(j.value || []));
       next = j['@odata.nextLink'] || null;
     }

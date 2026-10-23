@@ -11,5 +11,7 @@ window.FUSION_CONFIG = {
     Subway:   { label: 'Subway',   color: '#E3C934', fcGoal: 31.5, lcGoal: 19 },
     Wingstop: { label: 'Wingstop', color: '#2DC937', fcGoal: 36,   lcGoal: 15 }
   },
-  closedStores: ['Gong Cha Manati', 'Gong Cha San German', 'Gong Cha Guayama']
+  closedStores: ['Gong Cha Manati', 'Gong Cha San German', 'Gong Cha Guayama'],
+  // En Pendientes solo se muestran estas tiendas para la marca indicada (coincidencia parcial)
+  openOnly: { GONGCHA: ['Rexville'] }
 };
