@@ -32,7 +32,7 @@
     } else {
       const r = await fetch('/api/data', { credentials: 'include' });
       if (r.status === 401) { const e = new Error('Sesión expirada'); e.code = 401; throw e; }
-      if (!r.ok) { let msg = ''; try { msg = (await r.json()).error || ''; } catch (e) {} throw new Error(msg ? msg + ' (' + r.status + ')' : 'Error al cargar datos (' + r.status + ')'); }
+      if (!r.ok) { const body = await r.text().catch(() => ''); let msg = ''; try { msg = JSON.parse(body).error || ''; } catch (e) { msg = (r.status === 502 || r.status === 504) ? 'El servidor no respondió a tiempo (la función de Netlify se detuvo). Reintenta; si sigue, revisa Netlify → Functions → data → Logs.' : body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160); } throw new Error((msg || 'Error al cargar datos') + ' (' + r.status + ')'); }
       const j = await r.json();
       raw = Array.isArray(j) ? j : (j.rows || []);
     }

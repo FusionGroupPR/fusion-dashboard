@@ -17,6 +17,9 @@ const FIELDS = {
 const get = (obj, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
 const pick = (obj, paths) => { for (const p of paths) { const v = get(obj, p); if (v !== undefined && v !== null) return v; } return undefined; };
 
+let CACHE = null; // { at, rows } — se mantiene mientras la función siga "caliente"
+const CACHE_MS = 5 * 60 * 1000, DEADLINE_MS = 8500;
+
 export default async (req) => {
   if (!isAuthed(req)) return json({ error: 'No autorizado' }, 401);
   const url = process.env.COGNITO_ODATA_URL;
@@ -24,14 +27,27 @@ export default async (req) => {
 
   try {
     const debug = new URL(req.url).searchParams.get('debug') === '1';
+    const fresh = new URL(req.url).searchParams.get('fresh') === '1';
+    if (!debug && !fresh && CACHE && Date.now() - CACHE.at < CACHE_MS) return json({ rows: CACHE.rows, cached: true });
+    const t0 = Date.now();
     const entries = [];
     let next = url;
     for (let page = 0; next && page < 50; page++) {
       const headers = { Accept: 'application/json' };
       if (process.env.COGNITO_API_KEY) headers.Authorization = 'Bearer ' + process.env.COGNITO_API_KEY;
-      const r = await fetch(next, { headers });
+      const left = DEADLINE_MS - (Date.now() - t0);
+      if (left < 500) {
+        if (CACHE) return json({ rows: CACHE.rows, cached: true, stale: true });
+        return json({ error: 'Cognito tardó demasiado (' + entries.length + ' entradas leídas en ' + page + ' páginas). Intenta de nuevo en unos segundos.' }, 504);
+      }
+      const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), left);
+      let r;
+      try { r = await fetch(next, { headers, signal: ac.signal }); }
+      catch (e) { clearTimeout(timer); if (CACHE) return json({ rows: CACHE.rows, cached: true, stale: true }); return json({ error: e.name === 'AbortError' ? 'Cognito tardó demasiado en responder (' + entries.length + ' entradas leídas). Intenta de nuevo.' : 'No se pudo conectar a Cognito: ' + e.message }, 504); }
+      clearTimeout(timer);
       if (!r.ok) { const t = (await r.text()).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160); return json({ error: 'Cognito respondió ' + r.status + (r.status === 404 ? ' (URL no encontrada: revisa COGNITO_ODATA_URL)' : '') + (t ? ': ' + t : ''), url: next.replace(/access_token=[^&]+/, 'access_token=***') }, 502); }
-      const j = await r.json();
+      const txt = await r.text(); let j;
+      try { j = JSON.parse(txt); } catch (e) { return json({ error: 'Cognito no devolvió JSON: ' + txt.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160) }, 502); }
       // Si la URL es la raíz del servicio OData (lista de tablas), seguir a la primera tabla de entradas.
       if (page === 0 && Array.isArray(j.value) && j.value.length && j.value.every(v => v.kind === 'EntitySet' || (v.url && v.name && Object.keys(v).length <= 4))) {
         const set = j.value.find(v => /entr/i.test(v.name)) || j.value[0];
@@ -43,14 +59,16 @@ export default async (req) => {
       entries.push(...(j.value || []));
       next = j['@odata.nextLink'] || null;
     }
-    if (debug) return json({ total: entries.length, sample: entries.slice(0, 2) });
+    if (debug) return json({ total: entries.length, ms: Date.now() - t0, sample: entries.slice(0, 2) });
     const rows = entries.map(e => {
       const o = {};
       for (const [k, src] of Object.entries(FIELDS)) o[k] = pick(e, src);
       return o;
     });
+    CACHE = { at: Date.now(), rows };
     return json({ rows });
   } catch (err) {
+    if (CACHE) return json({ rows: CACHE.rows, cached: true, stale: true });
     return json({ error: 'No se pudo leer Cognito: ' + err.message }, 502);
   }
 };
