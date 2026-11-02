@@ -56,6 +56,13 @@ Luego: **Deploys → Trigger deploy → Deploy site** (las variables solo aplica
 | Valores en 0 | Nombre de campo distinto → revisar `debug=1` y `FIELDS` en `netlify/functions/data.mjs` |
 | Página en blanco | Falta algún archivo (support.js, api.js, config.js) |
 
+## 4b. Cómo se cargan los datos
+- La función **sync** corre cada 10 minutos y copia las entradas de Cognito a **Netlify Blobs**. El dashboard lee esa copia, así carga rápido aunque Cognito tarde.
+- La primera carga después del deploy puede tardar un poco: el dashboard reintenta solo mientras se hace la primera copia.
+- Diagnóstico: `/api/data?debug=1` muestra total de filas, hora de la última copia (`syncedAt`), avance en curso y el último error de Cognito.
+- Forzar un paso de sincronización: `/api/data?sync=1` (repetir hasta que diga `"done": true`).
+- Las tareas programadas solo corren en el deploy publicado (Netlify → Logs → Functions → sync).
+
 ## 5. Ajustes finales
 - **Nombre del sitio:** Site configuration → Change site name (ej. `fusion-store-analysis`).
 - **Dominio propio (opcional):** Domain management → Add a domain (ej. `dashboard.fusiongrouppr.com`) y crear el registro CNAME que indique Netlify.
