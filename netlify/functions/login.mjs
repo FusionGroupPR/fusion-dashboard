@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { createSessionCookie, json } from './_session.mjs';
+import { createSessionCookie, json } from '../lib/session.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);

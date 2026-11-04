@@ -1,4 +1,4 @@
-import { syncStep } from './_cognito.mjs';
+import { syncStep } from '../lib/cognito.mjs';
 
 // Corre cada 10 minutos en Netlify y copia los datos de Cognito a Netlify Blobs.
 export default async () => {

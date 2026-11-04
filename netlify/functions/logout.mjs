@@ -1,4 +1,4 @@
-import { clearSessionCookie, json } from './_session.mjs';
+import { clearSessionCookie, json } from '../lib/session.mjs';
 
 export default async () => json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie() });
 

@@ -1,5 +1,5 @@
-import { isAuthed, json } from './_session.mjs';
-import { store, syncStep } from './_cognito.mjs';
+import { isAuthed, json } from '../lib/session.mjs';
+import { store, syncStep } from '../lib/cognito.mjs';
 
 // Lee la copia guardada en Netlify Blobs (rápido). La copia la actualiza sync.mjs cada 10 min.
 const nc = r => { r.headers.set('Cache-Control', 'no-store'); return r; };
