@@ -484,10 +484,11 @@ class Component extends DCLogic {
     if (this.props.skipLogin || authed) this.load(); else this.setState({ phase: 'login' });
   }
   startTimer() { clearInterval(this._timer); this._timer = setInterval(() => this.load(true), (this.cfg().refreshMinutes || 10) * 60000); }
-  async load(silent) {
+  async load(silent, sync) {
     if (silent) this.setState({ refreshing: true });
     else this.setState({ phase: this.state.rows.length ? 'ready' : 'loading', refreshing: true });
     try {
+      if (sync && window.FusionAPI.syncNow) await window.FusionAPI.syncNow();
       const d = await window.FusionAPI.getData();
       if (this._dead) return;
       this.setState({ rows: d.rows, updatedAt: d.updatedAt, phase: 'ready', refreshing: false, banner: d.rows.length ? '' : 'La API no devolvió reportes.' });
@@ -550,7 +551,7 @@ class Component extends DCLogic {
       tabs: TABS.map(([k, label]) => ({ label, current: k === tab ? 'page' : undefined, color: k === tab ? '#fff' : '#A9ACCB', underline: k === tab ? '#7DC142' : 'transparent', select: () => this.setState({ tab: k }) })),
       tabsFlex: narrow ? '1 1 100%' : '1 1 auto', tabsOrder: narrow ? 3 : 1,
       updatedLabel: S.refreshing ? 'Actualizando…' : S.updatedAt ? 'Actualizado ' + new Date(S.updatedAt).toLocaleTimeString('es-PR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
-      refresh: () => this.load(true), logout: () => this.logout(), retry: () => this.load(),
+      refresh: () => this.load(true, true), logout: () => this.logout(), retry: () => this.load(),
       isLoading: S.phase === 'loading', isError: S.phase === 'error', errorMsg: S.error,
       skel: [1, 2, 3, 4, 5, 6, 7],
       hasBanner: !!S.banner, banner: S.banner, closeBanner: () => this.setState({ banner: '' }),

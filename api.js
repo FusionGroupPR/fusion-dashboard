@@ -32,7 +32,7 @@
     } else {
       let r;
       for (let i = 0; i < 40; i++) {
-        r = await fetch('/api/data', { credentials: 'include' });
+        r = await fetch('/api/data', { credentials: 'include', cache: 'no-store' });
         if (r.status !== 503) break;
         const j = await r.clone().json().catch(() => ({}));
         if (!j.syncing) break;
@@ -148,5 +148,16 @@
     return out;
   }
 
-  window.FusionAPI = { getData, login, logout, normalize, brandOf, isDemo };
+  // Trae de Cognito lo más reciente a la copia de Netlify antes de leerla (botón ↻).
+  async function syncNow() {
+    if (isDemo()) return;
+    for (let i = 0; i < 15; i++) {
+      const r = await fetch('/api/data?sync=1', { credentials: 'include', cache: 'no-store' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'No se pudo sincronizar con Cognito (' + r.status + ')');
+      if (j.done) return j;
+    }
+  }
+
+  window.FusionAPI = { getData, syncNow, login, logout, normalize, brandOf, isDemo };
 })();

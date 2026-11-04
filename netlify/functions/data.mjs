@@ -2,7 +2,9 @@ import { isAuthed, json } from './_session.mjs';
 import { store, syncStep } from './_cognito.mjs';
 
 // Lee la copia guardada en Netlify Blobs (rápido). La copia la actualiza sync.mjs cada 10 min.
-export default async (req) => {
+const nc = r => { r.headers.set('Cache-Control', 'no-store'); return r; };
+export default async (req) => nc(await handle(req));
+async function handle(req) {
   if (!isAuthed(req)) return json({ error: 'No autorizado' }, 401);
   const q = new URL(req.url).searchParams;
   try {
@@ -14,6 +16,7 @@ export default async (req) => {
       return json({
         total: data ? data.rows.length : 0, syncedAt: data && data.syncedAt, syncMs: data && data.ms, pages: data && data.pages,
         enProgreso: p && { filas: p.rows.length, paginas: p.page },
+        ultimaEjecucion: await s.get('lastRun', { type: 'json' }),
         ultimoError: await s.get('lastError', { type: 'json' }),
         sample: data ? data.rows.slice(0, 2) : []
       });
@@ -28,6 +31,6 @@ export default async (req) => {
   } catch (err) {
     return json({ error: 'No se pudo leer Cognito: ' + err.message }, 502);
   }
-};
+}
 
 export const config = { path: '/api/data' };

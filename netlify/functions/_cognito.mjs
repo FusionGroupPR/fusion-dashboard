@@ -42,6 +42,7 @@ export async function syncStep(budgetMs) {
     } catch (e) {
       clearTimeout(timer);
       if (e.name === 'AbortError') break; // sin tiempo: se continúa en la próxima llamada
+      await s.setJSON('lastRun', { at: new Date().toISOString(), done: false, error: e.message });
       await s.setJSON('lastError', { at: new Date().toISOString(), error: e.message });
       throw e;
     }
@@ -59,6 +60,7 @@ export async function syncStep(budgetMs) {
     if (prog.next) await s.setJSON('progress', prog);
   }
 
+  await s.setJSON('lastRun', { at: new Date().toISOString(), done: !prog.next, filas: prog.rows.length, paginas: prog.page });
   if (!prog.next) {
     await s.setJSON('data', { rows: prog.rows, syncedAt: new Date().toISOString(), ms: Date.now() - prog.startedAt, pages: prog.page });
     await s.delete('progress');
