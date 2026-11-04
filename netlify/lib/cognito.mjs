@@ -24,6 +24,8 @@ const SELECTS = [
   'Id,STORE,WEEKENDING,FOODCOST_SALES2,FOODCOST_PURCHASE,FOODCOST_BEGINNINV,FOODCOST_ENDINGINV,LABORCOST_LABOR,Entry_DateSubmitted',
   null
 ];
+// Conserva los parámetros de la URL de Cognito (incluye el access token) y quita solo los de OData ($...).
+const keepAuth = u => { for (const k of [...u.searchParams.keys()]) if (k.startsWith('$')) u.searchParams.delete(k); };
 const buildUrl = (base, mode, size, skip) => {
   const u = new URL(base);
   if (SELECTS[mode]) u.searchParams.set('$select', SELECTS[mode]);
@@ -40,7 +42,8 @@ export async function syncStep(budgetMs) {
   const s = store(), t0 = Date.now();
   const headers = { Accept: 'application/json' };
   if (process.env.COGNITO_API_KEY) headers.Authorization = 'Bearer ' + process.env.COGNITO_API_KEY;
-  const cfg = (await s.get('cfg', { type: 'json' })) || { base: null, mode: 0, size: 100 };
+  let cfg = (await s.get('cfg', { type: 'json' })) || { base: null, mode: 0, size: 100 };
+  if (cfg.src !== url) cfg = { base: null, mode: 0, size: 100, src: url };
   let prog = await s.get('progress', { type: 'json' });
   if (!prog || Date.now() - (prog.startedAt || 0) > 60 * 60 * 1000) prog = { rows: [], skip: 0, page: 0, next: null, chunk: 0, startedAt: Date.now() };
 
@@ -85,9 +88,9 @@ export async function syncStep(budgetMs) {
       const isRoot = Array.isArray(j.value) && j.value.length && j.value.every(v => v.kind === 'EntitySet' || (v.url && v.name && Object.keys(v).length <= 4));
       if (isRoot) {
         const set = j.value.find(v => /entr/i.test(v.name)) || j.value[0];
-        const u = new URL(url); u.pathname = u.pathname.replace(/\/$/, '') + '/' + set.url; u.search = '';
+        const u = new URL(url); u.pathname = u.pathname.replace(/\/$/, '') + '/' + set.url; keepAuth(u);
         cfg.base = u.toString();
-      } else { const u = new URL(url); u.search = ''; cfg.base = u.toString(); }
+      } else { const u = new URL(url); keepAuth(u); cfg.base = u.toString(); }
       continue;
     }
 
