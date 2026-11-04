@@ -6,4 +6,4 @@ export default async () => {
   return new Response('ok');
 };
 
-export const config = { schedule: '*/10 * * * *' };
+export const config = { schedule: '0 * * * *' };
