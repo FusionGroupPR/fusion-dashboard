@@ -2,6 +2,13 @@
   publish = "."
   functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = []
+
+[build.environment]
+  NODE_VERSION = "20"
+
 [[headers]]
   for = "/*"
   [headers.values]
