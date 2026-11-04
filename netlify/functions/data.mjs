@@ -9,13 +9,15 @@ async function handle(req) {
   const q = new URL(req.url).searchParams;
   try {
     const s = store();
-    if (q.get('sync') === '1') return json(await syncStep(7000));
+    if (q.get('reset') === '1') { await s.delete('cfg'); await s.delete('progress'); return json({ reset: true }); }
+    if (q.get('sync') === '1') return json(await syncStep(8000));
     let data = await s.get('data', { type: 'json' });
     if (q.get('debug') === '1') {
       const p = await s.get('progress', { type: 'json' });
       return json({
         total: data ? data.rows.length : 0, syncedAt: data && data.syncedAt, syncMs: data && data.ms, pages: data && data.pages,
-        enProgreso: p && { filas: p.rows.length, paginas: p.page },
+        enProgreso: p && { filas: p.rows.length, lotes: p.page },
+        cfg: await s.get('cfg', { type: 'json' }),
         ultimaEjecucion: await s.get('lastRun', { type: 'json' }),
         ultimoError: await s.get('lastError', { type: 'json' }),
         sample: data ? data.rows.slice(0, 2) : []

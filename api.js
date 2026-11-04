@@ -151,7 +151,7 @@
   // Trae de Cognito lo más reciente a la copia de Netlify antes de leerla (botón ↻).
   async function syncNow() {
     if (isDemo()) return;
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 40; i++) {
       const r = await fetch('/api/data?sync=1', { credentials: 'include', cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'No se pudo sincronizar con Cognito (' + r.status + ')');
