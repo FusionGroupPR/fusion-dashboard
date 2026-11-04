@@ -26,13 +26,7 @@ const SELECTS = [
 ];
 // Conserva los parámetros de la URL de Cognito (incluye el access token) y quita solo los de OData ($...).
 const keepAuth = u => { for (const k of [...u.searchParams.keys()]) if (k.startsWith('$')) u.searchParams.delete(k); };
-const buildUrl = (base, mode, size, skip) => {
-  const u = new URL(base);
-  if (SELECTS[mode]) u.searchParams.set('$select', SELECTS[mode]);
-  u.searchParams.set('$top', String(size));
-  if (skip) u.searchParams.set('$skip', String(skip));
-  return u.toString();
-};
+const buildUrl = (base) => base;
 
 // Lee lotes pequeños de Cognito durante budgetMs y guarda el avance en Netlify Blobs
 // después de cada lote. Si no termina, la próxima llamada continúa desde donde quedó.
@@ -73,17 +67,15 @@ export async function syncStep(budgetMs) {
     if (left < 2000) return finish(false);
     let target;
     if (!cfg.base) target = url;
-    else target = prog.next || buildUrl(cfg.base, cfg.mode, cfg.size, prog.skip);
-    const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), Math.min(left - 1000, 12000));
+    else target = prog.next || buildUrl(cfg.base);
+    const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), left - 1500);
     L('pidiendo', target.replace(/([?&](access_token|token|key)=)[^&]+/gi, '$1***'));
     let r, txt;
-    try { r = await fetch(target, { headers, signal: ac.signal }); txt = await r.text(); }
+    try { const wait = left - 1200; [r, txt] = await T(wait, fetch(target, { headers, signal: ac.signal }).then(async x => [x, await x.text()]), 'Cognito'); }
     catch (e) {
       clearTimeout(timer);
       L('sin respuesta de Cognito', (Date.now() - t0) + 'ms');
-      if (e.name === 'AbortError') {
-        // Lote demasiado lento: reducir el tamaño para el próximo intento.
-        if (cfg.base && !prog.next) cfg.size = Math.max(10, Math.floor(cfg.size / 2));
+      if (e.name === 'AbortError' || /Tiempo agotado en Cognito/.test(e.message)) { ac.abort();
         return finish(false);
       }
       return fail('No se pudo conectar a Cognito: ' + e.message);
@@ -91,6 +83,7 @@ export async function syncStep(budgetMs) {
     clearTimeout(timer);
     L('respuesta', r.status, txt.length + ' bytes', (Date.now() - t0) + 'ms');
 
+    let j0 = null;
     if (!cfg.base) {
       if (!r.ok) return fail('Cognito respondió ' + r.status + (r.status === 404 ? ' (URL no encontrada: revisa COGNITO_ODATA_URL)' : '') + ': ' + clean(txt));
       let j; try { j = JSON.parse(txt); } catch (e) { return fail('Cognito no devolvió JSON: ' + clean(txt)); }
@@ -99,23 +92,19 @@ export async function syncStep(budgetMs) {
         const set = j.value.find(v => /entr/i.test(v.name)) || j.value[0];
         const u = new URL(url); u.pathname = u.pathname.replace(/\/$/, '') + '/' + set.url; keepAuth(u);
         cfg.base = u.toString();
-      } else { const u = new URL(url); keepAuth(u); cfg.base = u.toString(); }
-      continue;
+        continue;
+      }
+      cfg.base = url; j0 = j; // la URL ya es la de entradas: usar esta respuesta
     }
 
-    if (r.status === 400 && cfg.mode < SELECTS.length - 1 && !prog.next) { cfg.mode++; continue; }
-    if (!r.ok) return fail('Cognito respondió ' + r.status + ': ' + clean(txt));
-    let j; try { j = JSON.parse(txt); } catch (e) { return fail('Cognito no devolvió JSON: ' + clean(txt)); }
+    if (!j0 && !r.ok) { L('error', clean(txt)); return fail('Cognito respondió ' + r.status + ': ' + clean(txt)); }
+    let j = j0; if (!j) try { j = JSON.parse(txt); } catch (e) { return fail('Cognito no devolvió JSON: ' + clean(txt)); }
     const vals = j.value || [];
     prog.rows.push(...vals.map(mapEntry));
     prog.page++;
-    prog.chunk += vals.length;
-    if (j['@odata.nextLink']) { prog.next = j['@odata.nextLink']; }
-    else {
-      prog.next = null;
-      if (prog.chunk < cfg.size) return finish(true);
-      prog.skip += prog.chunk; prog.chunk = 0;
-    }
+    prog.next = j['@odata.nextLink'] || null;
+    L('lote', prog.page, vals.length + ' filas', 'total=' + prog.rows.length, prog.next ? 'hay más' : 'fin');
+    if (!prog.next) return finish(true);
     await s.setJSON('progress', prog);
   }
 }
