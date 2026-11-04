@@ -1,5 +1,7 @@
 import { isAuthed, json } from '../lib/session.mjs';
-import { store, syncStep } from '../lib/cognito.mjs';
+import { store } from '../lib/cognito.mjs';
+
+const launch = req => fetch(new URL(req.url).origin + '/.netlify/functions/sync-background', { method: 'POST', headers: { 'x-sync-key': process.env.SESSION_SECRET } });
 
 // Lee la copia guardada en Netlify Blobs (rápido). La copia la actualiza sync.mjs cada 10 min.
 const nc = r => { r.headers.set('Cache-Control', 'no-store'); return r; };
@@ -10,7 +12,7 @@ async function handle(req) {
   try {
     const s = store();
     if (q.get('reset') === '1') { await s.delete('cfg'); await s.delete('progress'); return json({ reset: true }); }
-    if (q.get('sync') === '1') return json(await syncStep(8000));
+    if (q.get('sync') === '1') { const r = await launch(req); return json({ started: r.status === 202 || r.ok, status: r.status }); }
     let data = await s.get('data', { type: 'json' });
     if (q.get('debug') === '1') {
       const p = await s.get('progress', { type: 'json' });
@@ -25,9 +27,9 @@ async function handle(req) {
     }
     if (!data) {
       // Primera vez: avanzar la copia unos segundos; el navegador reintenta solo.
-      const r = await syncStep(7000);
-      if (!r.done) return json({ syncing: true, total: r.total, pages: r.pages }, 503);
-      data = await s.get('data', { type: 'json' });
+      const p = await s.get('progress', { type: 'json' });
+      if (!p) await launch(req);
+      return json({ syncing: true, total: p ? p.rows.length : 0 }, 503);
     }
     return json({ rows: data.rows, syncedAt: data.syncedAt });
   } catch (err) {

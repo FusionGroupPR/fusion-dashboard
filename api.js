@@ -31,12 +31,12 @@
       raw = demoRaw();
     } else {
       let r;
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 80; i++) {
         r = await fetch('/api/data', { credentials: 'include', cache: 'no-store' });
         if (r.status !== 503) break;
         const j = await r.clone().json().catch(() => ({}));
         if (!j.syncing) break;
-        await new Promise(res => setTimeout(res, 1500));
+        await new Promise(res => setTimeout(res, 3000));
       }
       if (r.status === 401) { const e = new Error('Sesión expirada'); e.code = 401; throw e; }
       if (!r.ok) { const body = await r.text().catch(() => ''); let msg = ''; try { msg = JSON.parse(body).error || ''; } catch (e) { msg = (r.status === 502 || r.status === 504) ? 'El servidor no respondió a tiempo. Reintenta; si sigue, abre /api/data?debug=1 para ver el detalle.' : body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160); } throw new Error((msg || 'Error al cargar datos') + ' (' + r.status + ')'); }
@@ -151,11 +151,15 @@
   // Trae de Cognito lo más reciente a la copia de Netlify antes de leerla (botón ↻).
   async function syncNow() {
     if (isDemo()) return;
-    for (let i = 0; i < 40; i++) {
-      const r = await fetch('/api/data?sync=1', { credentials: 'include', cache: 'no-store' });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || 'No se pudo sincronizar con Cognito (' + r.status + ')');
-      if (j.done) return j;
+    const dbg = async () => { const r = await fetch('/api/data?debug=1', { credentials: 'include', cache: 'no-store' }); return r.json().catch(() => ({})); };
+    const before = (await dbg()).syncedAt || null, t0 = new Date().toISOString();
+    const r = await fetch('/api/data?sync=1', { credentials: 'include', cache: 'no-store' });
+    if (!r.ok) throw new Error('No se pudo iniciar la sincronización (' + r.status + ')');
+    for (let i = 0; i < 60; i++) {
+      await new Promise(res => setTimeout(res, 3000));
+      const j = await dbg();
+      if (j.syncedAt && j.syncedAt !== before) return j;
+      if (j.ultimoError && j.ultimoError.at > t0) throw new Error(j.ultimoError.error);
     }
   }
 

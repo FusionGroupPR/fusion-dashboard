@@ -1,9 +1,8 @@
-import { syncStep } from '../lib/cognito.mjs';
-
-// Corre cada 10 minutos en Netlify y copia los datos de Cognito a Netlify Blobs.
+// Corre cada 10 minutos y lanza la copia de Cognito en una función de fondo.
 export default async () => {
-  try { const r = await syncStep(26000); console.log('sync', JSON.stringify(r)); }
-  catch (e) { console.error('sync error', e.message); }
+  const base = process.env.URL || process.env.DEPLOY_PRIME_URL;
+  const r = await fetch(base + '/.netlify/functions/sync-background', { method: 'POST', headers: { 'x-sync-key': process.env.SESSION_SECRET } });
+  console.log('[sync] lanzado', r.status);
   return new Response('ok');
 };
 
