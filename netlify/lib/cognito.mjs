@@ -36,15 +36,21 @@ const buildUrl = (base, mode, size, skip) => {
 
 // Lee lotes pequeños de Cognito durante budgetMs y guarda el avance en Netlify Blobs
 // después de cada lote. Si no termina, la próxima llamada continúa desde donde quedó.
+const T = (ms, p, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('Tiempo agotado en ' + what)), ms))]);
+const L = (...a) => console.log('[sync]', ...a);
+
 export async function syncStep(budgetMs) {
   const url = process.env.COGNITO_ODATA_URL;
   if (!url) throw new Error('Falta COGNITO_ODATA_URL');
-  const s = store(), t0 = Date.now();
+  const t0 = Date.now(), raw = store();
+  const s = { get: (k, o) => T(4000, raw.get(k, o), 'leer ' + k), setJSON: (k, v) => T(6000, raw.setJSON(k, v), 'guardar ' + k), delete: k => T(4000, raw.delete(k), 'borrar ' + k) };
+  L('inicio');
   const headers = { Accept: 'application/json' };
   if (process.env.COGNITO_API_KEY) headers.Authorization = 'Bearer ' + process.env.COGNITO_API_KEY;
   let cfg = (await s.get('cfg', { type: 'json' })) || { base: null, mode: 0, size: 100 };
   if (cfg.src !== url) cfg = { base: null, mode: 0, size: 100, src: url };
   let prog = await s.get('progress', { type: 'json' });
+  L('estado', 'base=' + !!cfg.base, 'modo=' + cfg.mode, 'lote=' + cfg.size, 'filas=' + (prog ? prog.rows.length : 0), (Date.now() - t0) + 'ms');
   if (!prog || Date.now() - (prog.startedAt || 0) > 60 * 60 * 1000) prog = { rows: [], skip: 0, page: 0, next: null, chunk: 0, startedAt: Date.now() };
 
   const finish = async (done) => {
@@ -68,11 +74,13 @@ export async function syncStep(budgetMs) {
     let target;
     if (!cfg.base) target = url;
     else target = prog.next || buildUrl(cfg.base, cfg.mode, cfg.size, prog.skip);
-    const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), left - 1000);
+    const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), Math.min(left - 1000, 12000));
+    L('pidiendo', target.replace(/([?&](access_token|token|key)=)[^&]+/gi, '$1***'));
     let r, txt;
     try { r = await fetch(target, { headers, signal: ac.signal }); txt = await r.text(); }
     catch (e) {
       clearTimeout(timer);
+      L('sin respuesta de Cognito', (Date.now() - t0) + 'ms');
       if (e.name === 'AbortError') {
         // Lote demasiado lento: reducir el tamaño para el próximo intento.
         if (cfg.base && !prog.next) cfg.size = Math.max(10, Math.floor(cfg.size / 2));
@@ -81,6 +89,7 @@ export async function syncStep(budgetMs) {
       return fail('No se pudo conectar a Cognito: ' + e.message);
     }
     clearTimeout(timer);
+    L('respuesta', r.status, txt.length + ' bytes', (Date.now() - t0) + 'ms');
 
     if (!cfg.base) {
       if (!r.ok) return fail('Cognito respondió ' + r.status + (r.status === 404 ? ' (URL no encontrada: revisa COGNITO_ODATA_URL)' : '') + ': ' + clean(txt));
